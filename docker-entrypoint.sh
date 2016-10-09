@@ -1,6 +1,18 @@
 #!/bin/bash
 set -e
 
+if [ -z ${USER_UID+x}; then
+	echo >&2 "Variable USER_UID is not set, skipping."
+   else
+	: ${USER_GID:=${USER_UID}}
+	usermod -u $USER_UID www-data
+	groupmod -g $USER_GID www-data
+	find / -user www-data -exec chown -h $USER_UID {} \;
+	find / -group www-data -exec chgrp -h $USER_GID {} \;
+	usermod -g www-data www-data
+	echo >&2 "Ownership forced to new UID: $USER_UID and GID: $USER_GID."
+fi
+
 if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 	: "${WORDPRESS_DB_HOST:=mysql}"
 	# if we're linked to MySQL and thus have credentials already, let's use them
