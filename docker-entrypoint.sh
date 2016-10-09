@@ -4,13 +4,17 @@ set -e
 if [ -z ${USER_UID+x} ]; then
 	echo >&2 "Variable USER_UID is not set, skipping."
    else
-	: ${USER_GID:=${USER_UID}}
-	usermod -u $USER_UID www-data
-	groupmod -g $USER_GID www-data
-	find / -user www-data -exec chown -h $USER_UID {} \;
-	find / -group www-data -exec chgrp -h $USER_GID {} \;
-	usermod -g www-data www-data
-	echo >&2 "Ownership forced to new UID: $USER_UID and GID: $USER_GID."
+	if [ $(id -u www-data) -ne 33 ]; then
+		echo >&2 "UID and GID for www-data already modified, skipping."
+	   else
+		: ${USER_GID:=${USER_UID}}
+		usermod -u $USER_UID www-data
+		groupmod -g $USER_GID www-data
+		find / -user 33 2>/dev/null | xargs -r chown -h $USER_UID
+		find / -group 33 2>/dev/null | xargs -r chgrp -h $USER_GID
+		usermod -g www-data www-data
+		echo >&2 "Ownership forced to new UID: $USER_UID and GID: $USER_GID."
+	fi
 fi
 
 if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
