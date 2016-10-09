@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-if [ -z ${USER_UID+x}; then
+if [ -z ${USER_UID+x} ]; then
 	echo >&2 "Variable USER_UID is not set, skipping."
    else
 	: ${USER_GID:=${USER_UID}}
